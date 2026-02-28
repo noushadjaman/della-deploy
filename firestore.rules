@@ -1,0 +1,63 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the user is the admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'admin@admin.della';
+    }
+    
+    // Helper function to check if the user is the owner of the document
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    // Publicly readable collections, Admin only writes (except stock updates)
+    match /products/{productId} {
+      allow read: if true;
+      // Allow customers to update stock/sizes, but restrict other fields to Admin
+      allow update: if isAdmin() || (
+        request.auth != null && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'sizes'])
+      );
+      allow create, delete: if isAdmin();
+    }
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /brands/{brandId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Orders: Secure partition
+    match /orders/{orderId} {
+      // allow creation: 
+      // 1. User is logged in and assigns the order to themselves
+      // 2. Guest checkout (userId is null) - Optional, based on your implementation
+      allow create: if (request.auth != null && request.resource.data.userId == request.auth.uid) || 
+                       (request.auth == null && request.resource.data.userId == null);
+      
+      // allow read: Admin can see all, Users can only see their own
+      allow read: if isAdmin() || (request.auth != null && resource.data.userId == request.auth.uid);
+      
+      // Updates and deletions (restocking/status) only by admin
+      allow update, delete: if isAdmin();
+    }
+
+    // Wallet: Private, Admin only
+    match /wallet/{transactionId} {
+      allow read, write: if isAdmin();
+    }
+    
+    // Default: Deny everything else
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

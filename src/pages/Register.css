@@ -1,0 +1,23 @@
+/* Google sign-in button styles for Register page */
+.google-btn {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  color: #202124;
+  padding: 10px 16px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 6px 18px rgba(60,64,67,0.08);
+  font-weight: 500;
+}
+
+.google-btn .google-svg { width: 20px; height: 20px; display:block; }
+
+.google-btn:hover {
+  box-shadow: 0 8px 24px rgba(60,64,67,0.12);
+  transform: translateY(-1px);
+}
+
+.google-full { width: 100%; }

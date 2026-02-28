@@ -11,7 +11,6 @@ const Chatbot = () => {
     ]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
-    const [categories, setCategories] = useState([]);
     const [products, setProducts] = useState([]);
     const messagesEndRef = useRef(null);
 
@@ -19,9 +18,6 @@ const Chatbot = () => {
     useEffect(() => {
         const fetchContext = async () => {
             try {
-                const catSnapshot = await getDocs(collection(db, 'categories'));
-                setCategories(catSnapshot.docs.map(doc => doc.data().name));
-
                 const prodSnapshot = await getDocs(collection(db, 'products'));
                 setProducts(prodSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
             } catch (err) {

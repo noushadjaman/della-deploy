@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp, doc, runTransaction, getDoc } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, runTransaction } from 'firebase/firestore';
 
 const Payment = () => {
   const { state } = useLocation();

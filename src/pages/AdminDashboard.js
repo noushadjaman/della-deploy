@@ -16,7 +16,7 @@ const AdminDashboard = () => {
   const stockRef = useRef();
   const descriptionRef = useRef();
   const returnPolicyRef = useRef();
-  
+
   // Banner Refs
   const bannerTitleRef = useRef();
   const bannerDescRef = useRef();
@@ -33,7 +33,7 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   // File States
   const [productImages, setProductImages] = useState([null, null, null]);
   const [mainImageIndex, setMainImageIndex] = useState(0);
@@ -53,12 +53,7 @@ const AdminDashboard = () => {
   const [orders, setOrders] = useState([]);
   const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
   const [productSearch, setProductSearch] = useState('');
-  const [bannerSearch, setBannerSearch] = useState('');
-  const [categorySearch, setCategorySearch] = useState('');
-  const [brandSearch, setBrandSearch] = useState('');
   const [orderSearch, setOrderSearch] = useState('');
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showCustomerDetails, setShowCustomerDetails] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingBanner, setEditingBanner] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -67,12 +62,12 @@ const AdminDashboard = () => {
   const [editProductImages, setEditProductImages] = useState([null, null, null]);
   const [editMainImageIndex, setEditMainImageIndex] = useState(0);
   const [editImageFile, setEditImageFile] = useState(null);
-  
+
   const navigate = useNavigate();
 
   // Cloudinary Config
-  const CLOUD_NAME = "drht98uvm"; 
-  const UPLOAD_PRESET = "della_uploads"; 
+  const CLOUD_NAME = "drht98uvm";
+  const UPLOAD_PRESET = "della_uploads";
 
   // Protect the route and fetch data
   useEffect(() => {
@@ -171,7 +166,7 @@ const AdminDashboard = () => {
     );
 
     if (!response.ok) {
-        throw new Error("Image upload failed");
+      throw new Error("Image upload failed");
     }
 
     const data = await response.json();
@@ -180,8 +175,8 @@ const AdminDashboard = () => {
 
   const productBrandRef = useRef();
 
-  const clothingSizes = ['S','M','L','XL','XXL','XXXL'];
-  const shoeSizes = ['36','37','38','39','40','41','42','43','44'];
+  const clothingSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+  const shoeSizes = ['36', '37', '38', '39', '40', '41', '42', '43', '44'];
 
   const handleCategoryChange = (val) => {
     setSelectedCategory(val);
@@ -252,7 +247,7 @@ const AdminDashboard = () => {
     if (!sizesModalProduct) return;
     try {
       setLoading(true);
-      const sum = Object.values(sizesModalSizes).reduce((a,b) => a + Number(b || 0), 0);
+      const sum = Object.values(sizesModalSizes).reduce((a, b) => a + Number(b || 0), 0);
       await updateDoc(doc(db, 'products', sizesModalProduct.id), {
         sizes: sizesModalSizes,
         stock: sum,
@@ -272,7 +267,7 @@ const AdminDashboard = () => {
   async function handleProductSubmit(e) {
     e.preventDefault();
     if (currentUser?.email !== 'admin@admin.della') return setError('Access Denied');
-    
+
     // At least one image must be selected
     const selectedFiles = productImages.filter(f => f !== null);
     if (selectedFiles.length === 0) return setError('Please select at least one image for the product.');
@@ -290,8 +285,7 @@ const AdminDashboard = () => {
       });
 
       const imageUrls = await Promise.all(uploadPromises);
-      const validImageUrls = imageUrls.filter(url => url !== null);
-      
+
       // Determine the main imageUrl based on the mainImageIndex
       // We need to map the mainImageIndex back to the validImageUrls array
       // or just store the full array and an index. 
@@ -311,7 +305,7 @@ const AdminDashboard = () => {
         sizes: Object.keys(sizes || {}).length ? sizes : {},
         description: descriptionRef.current.value,
         returnPolicy: returnPolicyRef.current.value || '7 Days Return Policy',
-        imageUrls: finalImageUrls, 
+        imageUrls: finalImageUrls,
         mainImageIndex: mainImageIndex,
         imageUrl: finalImageUrls[mainImageIndex], // Keep for backward compatibility
         isFlashSale: isFlashSale,
@@ -322,8 +316,8 @@ const AdminDashboard = () => {
       });
 
       setSuccess('Product added successfully!');
-      e.target.reset(); 
-      setProductImages([null, null, null]); 
+      e.target.reset();
+      setProductImages([null, null, null]);
       setMainImageIndex(0);
       setIsFlashSale(false);
       setIsDailyDeal(false);
@@ -383,7 +377,7 @@ const AdminDashboard = () => {
       await addDoc(collection(db, 'banners'), {
         title: bannerTitleRef.current.value || '', // Optional
         description: bannerDescRef.current.value || '', // Optional
-        link: bannerLinkRef.current.value, 
+        link: bannerLinkRef.current.value,
         imageUrl: imageUrl,
         createdAt: serverTimestamp(),
         createdBy: currentUser.email
@@ -433,11 +427,11 @@ const AdminDashboard = () => {
 
   const openEditProduct = (p) => {
     setEditingProduct(p);
-    setEditFields({ 
-      name: p.name || '', 
-      price: p.price || 0, 
+    setEditFields({
+      name: p.name || '',
+      price: p.price || 0,
       discount: p.discount || 0,
-      stock: p.stock || 0, 
+      stock: p.stock || 0,
       category: p.category || '',
       brand: p.brand || 'Others',
       description: p.description || '',
@@ -453,10 +447,10 @@ const AdminDashboard = () => {
   const saveProduct = async () => {
     try {
       setLoading(true);
-      
+
       // Handle image updates
       const updatedImageUrls = [...(editFields.imageUrls || ["", "", ""])];
-      
+
       const uploadPromises = editProductImages.map(async (file, index) => {
         if (file) {
           const url = await uploadToCloudinary(file);
@@ -491,15 +485,15 @@ const AdminDashboard = () => {
         sizes: editFields.sizes || {},
         updatedAt: serverTimestamp()
       });
-      
-      setProducts(prev => prev.map(p => p.id === editingProduct.id ? { 
-        ...p, 
-        ...editFields, 
-        imageUrls: updatedImageUrls, 
-        mainImageIndex: editMainImageIndex, 
-        imageUrl: updatedImageUrls[editMainImageIndex] 
+
+      setProducts(prev => prev.map(p => p.id === editingProduct.id ? {
+        ...p,
+        ...editFields,
+        imageUrls: updatedImageUrls,
+        mainImageIndex: editMainImageIndex,
+        imageUrl: updatedImageUrls[editMainImageIndex]
       } : p));
-      
+
       setEditingProduct(null);
       setSuccess('Product updated');
     } catch (err) {
@@ -599,7 +593,7 @@ const AdminDashboard = () => {
       setLoading(true);
       const orderRef = doc(db, 'orders', orderId);
       const order = orders.find(o => o.id === orderId);
-      
+
       if (!order) {
         throw new Error('Order not found');
       }
@@ -626,7 +620,7 @@ const AdminDashboard = () => {
         };
 
         await addDoc(collection(db, 'wallet'), walletTransaction);
-        
+
         // Update wallet balance
         const newBalance = wallet.balance + productCost;
         setWallet(prev => ({
@@ -650,15 +644,14 @@ const AdminDashboard = () => {
 
   // Customer Details View
   const viewCustomerDetails = (order) => {
-    setSelectedOrder(order);
-    setShowCustomerDetails(true);
+    // Logic for viewing customer details can be added here if needed
   };
 
   // PDF Memo Generation
   const generateMemoPDF = async (order) => {
     try {
       setLoading(true);
-      
+
       // Create a hidden div for PDF generation
       const memoDiv = document.createElement('div');
       memoDiv.style.cssText = `
@@ -672,7 +665,7 @@ const AdminDashboard = () => {
         line-height: 1.4;
         color: #333;
       `;
-      
+
       // Generate memo HTML content
       const memoHTML = `
         <div style="border: 2px solid #d4af37; padding: 20px; border-radius: 10px; background: #fff;">
@@ -755,7 +748,7 @@ const AdminDashboard = () => {
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = 210;
       const pdfHeight = canvas.height * pdfWidth / canvas.width;
-      
+
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`DELLA_Order_${order.id.substring(0, 8)}.pdf`);
 
@@ -771,7 +764,7 @@ const AdminDashboard = () => {
   };
 
   if (!currentUser || currentUser.email !== 'admin@admin.della') {
-    return null; 
+    return null;
   }
 
   return (
@@ -802,15 +795,15 @@ const AdminDashboard = () => {
                             <Form.Label className="small fw-bold text-muted">Product Name</Form.Label>
                             <Form.Control type="text" ref={nameRef} placeholder="Enter name" required />
                           </Form.Group>
-                          
+
                           <Row>
                             <Col md={6}>
                               <Form.Group className="mb-3">
                                 <Form.Label className="small fw-bold text-muted">Category</Form.Label>
                                 <Form.Select value={selectedCategory} onChange={(e) => handleCategoryChange(e.target.value)} required>
-                                    <option value="">Select Category...</option>
-                                    {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
-                                  </Form.Select>
+                                  <option value="">Select Category...</option>
+                                  {categories.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
+                                </Form.Select>
                               </Form.Group>
                             </Col>
                             <Col md={6}>
@@ -868,16 +861,16 @@ const AdminDashboard = () => {
                           <Row className="mb-3 g-2">
                             {[0, 1, 2].map((idx) => (
                               <Col key={idx} xs={4}>
-                                <div className={`p-2 border rounded-3 text-center ${mainImageIndex === idx ? 'border-primary bg-light' : ''}`} style={{fontSize: '0.7rem'}}>
-                                  <input 
-                                    type="file" 
-                                    className="d-none" 
-                                    id={`file-${idx}`} 
+                                <div className={`p-2 border rounded-3 text-center ${mainImageIndex === idx ? 'border-primary bg-light' : ''}`} style={{ fontSize: '0.7rem' }}>
+                                  <input
+                                    type="file"
+                                    className="d-none"
+                                    id={`file-${idx}`}
                                     onChange={(e) => {
                                       const newFiles = [...productImages];
                                       newFiles[idx] = e.target.files[0];
                                       setProductImages(newFiles);
-                                    }} 
+                                    }}
                                   />
                                   <label htmlFor={`file-${idx}`} className="btn btn-sm btn-light w-100 mb-1 border">
                                     <i className="fas fa-upload"></i>
@@ -903,20 +896,20 @@ const AdminDashboard = () => {
                           </Form.Group>
 
                           <Form.Group className="mb-3">
-                            <Form.Check 
-                              type="checkbox" 
-                              label="Add to Flash Sale" 
-                              checked={isFlashSale} 
+                            <Form.Check
+                              type="checkbox"
+                              label="Add to Flash Sale"
+                              checked={isFlashSale}
                               onChange={(e) => setIsFlashSale(e.target.checked)}
                               className="fw-bold"
                             />
                           </Form.Group>
 
                           <Form.Group className="mb-4">
-                            <Form.Check 
-                              type="checkbox" 
-                              label="Add to Daily Deals" 
-                              checked={isDailyDeal} 
+                            <Form.Check
+                              type="checkbox"
+                              label="Add to Daily Deals"
+                              checked={isDailyDeal}
                               onChange={(e) => setIsDailyDeal(e.target.checked)}
                               className="fw-bold"
                             />
@@ -953,8 +946,8 @@ const AdminDashboard = () => {
                                 <tr key={p.id}>
                                   <td>
                                     <div className="d-flex align-items-center">
-                                      <img src={p.imageUrl} alt="" className="rounded-3 me-2" style={{width:35, height:35, objectFit:'cover'}} />
-                                      <div className="fw-bold text-truncate" style={{maxWidth:120}}>{p.name}</div>
+                                      <img src={p.imageUrl} alt="" className="rounded-3 me-2" style={{ width: 35, height: 35, objectFit: 'cover' }} />
+                                      <div className="fw-bold text-truncate" style={{ maxWidth: 120 }}>{p.name}</div>
                                     </div>
                                   </td>
                                   <td><span className="badge bg-light text-dark border">{p.category}</span></td>
@@ -1019,7 +1012,7 @@ const AdminDashboard = () => {
                           <tbody className="small">
                             {brands.map(b => (
                               <tr key={b.id}>
-                                <td><img src={b.imageUrl} alt="" className="rounded-circle shadow-sm border" style={{width:60, height:60, objectFit:'cover', background: 'white'}} /></td>
+                                <td><img src={b.imageUrl} alt="" className="rounded-circle shadow-sm border" style={{ width: 60, height: 60, objectFit: 'cover', background: 'white' }} /></td>
                                 <td className="fw-bold">{b.name}</td>
                                 <td>{b.info || '-'}</td>
                                 <td>
@@ -1082,7 +1075,7 @@ const AdminDashboard = () => {
                           <tbody className="small">
                             {banners.map(b => (
                               <tr key={b.id}>
-                                <td><img src={b.imageUrl} alt="" className="rounded-3" style={{width:80, height:40, objectFit:'cover'}} /></td>
+                                <td><img src={b.imageUrl} alt="" className="rounded-3" style={{ width: 80, height: 40, objectFit: 'cover' }} /></td>
                                 <td className="fw-bold">{b.title || '-'}</td>
                                 <td>{b.link}</td>
                                 <td>
@@ -1137,7 +1130,7 @@ const AdminDashboard = () => {
                           <tbody className="small">
                             {categories.map(c => (
                               <tr key={c.id}>
-                                <td><img src={c.imageUrl} alt="" className="rounded-3" style={{width:40, height:40, objectFit:'cover'}} /></td>
+                                <td><img src={c.imageUrl} alt="" className="rounded-3" style={{ width: 40, height: 40, objectFit: 'cover' }} /></td>
                                 <td className="fw-bold">{c.name}</td>
                                 <td>
                                   <div className="d-flex gap-1">
@@ -1168,7 +1161,7 @@ const AdminDashboard = () => {
                             <Form.Control size="sm" placeholder="Search orders..." value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} className="rounded-pill" />
                           </div>
                         </div>
-                        
+
                         {/* Wallet Balance */}
                         <div className="bg-light p-3 rounded mb-4">
                           <div className="d-flex justify-content-between align-items-center">
@@ -1196,7 +1189,7 @@ const AdminDashboard = () => {
                               </tr>
                             </thead>
                             <tbody className="small">
-                              {orders.filter(order => 
+                              {orders.filter(order =>
                                 order.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
                                 (order.fullName && order.fullName.toLowerCase().includes(orderSearch.toLowerCase())) ||
                                 (order.phone && order.phone.includes(orderSearch))
@@ -1213,11 +1206,11 @@ const AdminDashboard = () => {
                                     <strong>৳ {order.total}</strong>
                                   </td>
                                   <td>
-                                    <Badge 
-                                      bg={order.status === 'pending' ? 'warning' : 
-                                          order.status === 'shipped' ? 'info' : 
-                                          order.status === 'delivered' ? 'success' : 
-                                          order.status === 'cancelled' ? 'danger' : 'secondary'}
+                                    <Badge
+                                      bg={order.status === 'pending' ? 'warning' :
+                                        order.status === 'shipped' ? 'info' :
+                                          order.status === 'delivered' ? 'success' :
+                                            order.status === 'cancelled' ? 'danger' : 'secondary'}
                                       className="px-3 py-2"
                                     >
                                       {order.status.toUpperCase()}
@@ -1230,41 +1223,41 @@ const AdminDashboard = () => {
                                   </td>
                                   <td>
                                     <div className="d-flex gap-1">
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline-info" 
+                                      <Button
+                                        size="sm"
+                                        variant="outline-info"
                                         onClick={() => viewCustomerDetails(order)}
                                         title="View Customer Details"
                                       >
                                         <i className="fas fa-user me-1"></i> Details
                                       </Button>
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline-primary" 
+                                      <Button
+                                        size="sm"
+                                        variant="outline-primary"
                                         onClick={() => generateMemoPDF(order)}
                                         title="Download Memo PDF"
                                       >
                                         <i className="fas fa-file-pdf me-1"></i> PDF
                                       </Button>
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline-primary" 
+                                      <Button
+                                        size="sm"
+                                        variant="outline-primary"
                                         onClick={() => handleOrderStatusChange(order.id, 'shipped')}
                                         disabled={order.status === 'cancelled' || order.status === 'delivered'}
                                       >
                                         Ship
                                       </Button>
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline-success" 
+                                      <Button
+                                        size="sm"
+                                        variant="outline-success"
                                         onClick={() => handleOrderStatusChange(order.id, 'delivered')}
                                         disabled={order.status === 'cancelled' || order.status === 'pending'}
                                       >
                                         Delivered
                                       </Button>
-                                      <Button 
-                                        size="sm" 
-                                        variant="outline-danger" 
+                                      <Button
+                                        size="sm"
+                                        variant="outline-danger"
                                         onClick={() => handleOrderStatusChange(order.id, 'cancelled')}
                                         disabled={order.status === 'delivered'}
                                       >
@@ -1295,8 +1288,8 @@ const AdminDashboard = () => {
                                 <div>
                                   <div className="fw-bold">{transaction.description}</div>
                                   <small className="text-muted">
-                                    {transaction.createdAt && typeof transaction.createdAt.toDate === 'function' 
-                                      ? transaction.createdAt.toDate().toLocaleDateString() 
+                                    {transaction.createdAt && typeof transaction.createdAt.toDate === 'function'
+                                      ? transaction.createdAt.toDate().toLocaleDateString()
                                       : 'N/A'}
                                   </small>
                                 </div>
@@ -1325,25 +1318,25 @@ const AdminDashboard = () => {
           <Form>
             <Form.Group className="mb-3">
               <Form.Label>Name</Form.Label>
-              <Form.Control value={editFields.name || ''} onChange={(e)=>setEditFields(prev=>({...prev,name:e.target.value}))}/>
+              <Form.Control value={editFields.name || ''} onChange={(e) => setEditFields(prev => ({ ...prev, name: e.target.value }))} />
             </Form.Group>
             <Row>
               <Col>
                 <Form.Group className="mb-3">
                   <Form.Label>Price</Form.Label>
-                  <Form.Control type="number" step="0.01" value={editFields.price || 0} onChange={(e)=>setEditFields(prev=>({...prev,price:e.target.value}))}/>
+                  <Form.Control type="number" step="0.01" value={editFields.price || 0} onChange={(e) => setEditFields(prev => ({ ...prev, price: e.target.value }))} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group className="mb-3">
                   <Form.Label>Discount (%)</Form.Label>
-                  <Form.Control type="number" step="0.01" min="0" max="100" value={editFields.discount || 0} onChange={(e)=>setEditFields(prev=>({...prev,discount:e.target.value}))}/>
+                  <Form.Control type="number" step="0.01" min="0" max="100" value={editFields.discount || 0} onChange={(e) => setEditFields(prev => ({ ...prev, discount: e.target.value }))} />
                 </Form.Group>
               </Col>
               <Col>
                 <Form.Group className="mb-3">
                   <Form.Label>Stock</Form.Label>
-                  <Form.Control type="number" value={editFields.stock || 0} onChange={(e)=>setEditFields(prev=>({...prev,stock:e.target.value}))}/>
+                  <Form.Control type="number" value={editFields.stock || 0} onChange={(e) => setEditFields(prev => ({ ...prev, stock: e.target.value }))} />
                 </Form.Group>
               </Col>
             </Row>
@@ -1366,15 +1359,15 @@ const AdminDashboard = () => {
 
             <Form.Group className="mb-3">
               <Form.Label>Description</Form.Label>
-              <Form.Control as="textarea" rows={2} value={editFields.description || ''} onChange={(e)=>setEditFields(prev=>({...prev,description:e.target.value}))}/>
+              <Form.Control as="textarea" rows={2} value={editFields.description || ''} onChange={(e) => setEditFields(prev => ({ ...prev, description: e.target.value }))} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Return Policy</Form.Label>
-              <Form.Control value={editFields.returnPolicy || ''} onChange={(e)=>setEditFields(prev=>({...prev,returnPolicy:e.target.value}))}/>
+              <Form.Control value={editFields.returnPolicy || ''} onChange={(e) => setEditFields(prev => ({ ...prev, returnPolicy: e.target.value }))} />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Category</Form.Label>
-              <Form.Select value={editFields.category || ''} onChange={(e)=>handleEditCategoryChange(e.target.value)}>
+              <Form.Select value={editFields.category || ''} onChange={(e) => handleEditCategoryChange(e.target.value)}>
                 <option value="">Select Category...</option>
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.name}>{cat.name}</option>
@@ -1383,7 +1376,7 @@ const AdminDashboard = () => {
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Brand</Form.Label>
-              <Form.Select value={editFields.brand || 'Others'} onChange={(e)=>setEditFields(prev=>({...prev,brand:e.target.value}))}>
+              <Form.Select value={editFields.brand || 'Others'} onChange={(e) => setEditFields(prev => ({ ...prev, brand: e.target.value }))}>
                 <option value="Others">Others</option>
                 {brands.map(brand => (
                   <option key={brand.id} value={brand.name}>{brand.name}</option>
@@ -1392,20 +1385,20 @@ const AdminDashboard = () => {
             </Form.Group>
 
             <Form.Group className="mb-2">
-              <Form.Check 
-                type="checkbox" 
-                label="Add to Flash Sale" 
-                checked={editFields.isFlashSale || false} 
-                onChange={(e) => setEditFields(prev => ({...prev, isFlashSale: e.target.checked}))}
+              <Form.Check
+                type="checkbox"
+                label="Add to Flash Sale"
+                checked={editFields.isFlashSale || false}
+                onChange={(e) => setEditFields(prev => ({ ...prev, isFlashSale: e.target.checked }))}
               />
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Check 
-                type="checkbox" 
-                label="Add to Daily Deals" 
-                checked={editFields.isDailyDeal || false} 
-                onChange={(e) => setEditFields(prev => ({...prev, isDailyDeal: e.target.checked}))}
+              <Form.Check
+                type="checkbox"
+                label="Add to Daily Deals"
+                checked={editFields.isDailyDeal || false}
+                onChange={(e) => setEditFields(prev => ({ ...prev, isDailyDeal: e.target.checked }))}
               />
             </Form.Group>
 
@@ -1414,26 +1407,26 @@ const AdminDashboard = () => {
               {[0, 1, 2].map((idx) => (
                 <Col key={idx} md={4}>
                   <div className={`p-2 border rounded ${editMainImageIndex === idx ? 'border-primary bg-light' : ''}`}>
-                    <div className="mb-2 text-center bg-white border rounded overflow-hidden" style={{height:60}}>
+                    <div className="mb-2 text-center bg-white border rounded overflow-hidden" style={{ height: 60 }}>
                       {editFields.imageUrls?.[idx] ? (
-                        <img src={editFields.imageUrls[idx]} alt="preview" style={{height:'100%', width:'100%', objectFit:'cover'}} />
+                        <img src={editFields.imageUrls[idx]} alt="preview" style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <span className="text-muted" style={{fontSize:10, lineHeight:'60px'}}>No image</span>
+                        <span className="text-muted" style={{ fontSize: 10, lineHeight: '60px' }}>No image</span>
                       )}
                     </div>
                     <Form.Group className="mb-2">
-                      <Form.Control 
-                        type="file" 
-                        accept="image/*" 
+                      <Form.Control
+                        type="file"
+                        accept="image/*"
                         size="sm"
                         onChange={(e) => {
                           const newFiles = [...editProductImages];
                           newFiles[idx] = e.target.files[0];
                           setEditProductImages(newFiles);
-                        }} 
+                        }}
                       />
                     </Form.Group>
-                    <Form.Check 
+                    <Form.Check
                       type="radio"
                       label="Home photo"
                       name="editMainImage"
@@ -1448,8 +1441,8 @@ const AdminDashboard = () => {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={()=>setEditingProduct(null)}>Cancel</Button>
-          <Button variant="primary" disabled={loading} onClick={saveProduct}>{loading?'Saving...':'Save'}</Button>
+          <Button variant="secondary" onClick={() => setEditingProduct(null)}>Cancel</Button>
+          <Button variant="primary" disabled={loading} onClick={saveProduct}>{loading ? 'Saving...' : 'Save'}</Button>
         </Modal.Footer>
       </Modal>
 
@@ -1461,21 +1454,21 @@ const AdminDashboard = () => {
           <Form>
             <Form.Group className="mb-3">
               <Form.Label>Brand Name</Form.Label>
-              <Form.Control value={editFields.name || ''} onChange={(e)=>setEditFields(prev=>({...prev,name:e.target.value}))}/>
+              <Form.Control value={editFields.name || ''} onChange={(e) => setEditFields(prev => ({ ...prev, name: e.target.value }))} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Brand Info</Form.Label>
-              <Form.Control value={editFields.info || ''} onChange={(e)=>setEditFields(prev=>({...prev,info:e.target.value}))}/>
+              <Form.Control value={editFields.info || ''} onChange={(e) => setEditFields(prev => ({ ...prev, info: e.target.value }))} />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>New Logo (optional)</Form.Label>
-              <Form.Control type="file" accept="image/*" onChange={(e)=>setEditImageFile(e.target.files[0] || null)} />
+              <Form.Control type="file" accept="image/*" onChange={(e) => setEditImageFile(e.target.files[0] || null)} />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={()=>setEditingBrand(null)}>Cancel</Button>
-          <Button variant="primary" disabled={loading} onClick={saveBrand}>{loading?'Saving...':'Save'}</Button>
+          <Button variant="secondary" onClick={() => setEditingBrand(null)}>Cancel</Button>
+          <Button variant="primary" disabled={loading} onClick={saveBrand}>{loading ? 'Saving...' : 'Save'}</Button>
         </Modal.Footer>
       </Modal>
 
@@ -1519,25 +1512,25 @@ const AdminDashboard = () => {
           <Form>
             <Form.Group className="mb-3">
               <Form.Label>Title</Form.Label>
-              <Form.Control value={editFields.title || ''} onChange={(e)=>setEditFields(prev=>({...prev,title:e.target.value}))}/>
+              <Form.Control value={editFields.title || ''} onChange={(e) => setEditFields(prev => ({ ...prev, title: e.target.value }))} />
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Description</Form.Label>
-              <Form.Control value={editFields.description || ''} onChange={(e)=>setEditFields(prev=>({...prev,description:e.target.value}))}/>
+              <Form.Control value={editFields.description || ''} onChange={(e) => setEditFields(prev => ({ ...prev, description: e.target.value }))} />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>Link</Form.Label>
-              <Form.Control value={editFields.link || ''} onChange={(e)=>setEditFields(prev=>({...prev,link:e.target.value}))}/>
+              <Form.Control value={editFields.link || ''} onChange={(e) => setEditFields(prev => ({ ...prev, link: e.target.value }))} />
             </Form.Group>
             <Form.Group className="mb-2">
               <Form.Label>New Image (optional)</Form.Label>
-              <Form.Control type="file" accept="image/*" onChange={(e)=>setEditImageFile(e.target.files[0] || null)} />
+              <Form.Control type="file" accept="image/*" onChange={(e) => setEditImageFile(e.target.files[0] || null)} />
             </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={()=>setEditingBanner(null)}>Cancel</Button>
-          <Button variant="primary" disabled={loading} onClick={saveBanner}>{loading?'Saving...':'Save'}</Button>
+          <Button variant="secondary" onClick={() => setEditingBanner(null)}>Cancel</Button>
+          <Button variant="primary" disabled={loading} onClick={saveBanner}>{loading ? 'Saving...' : 'Save'}</Button>
         </Modal.Footer>
       </Modal>
 
@@ -1548,16 +1541,16 @@ const AdminDashboard = () => {
         <Modal.Body>
           <Form.Group className="mb-2">
             <Form.Label>Name</Form.Label>
-            <Form.Control value={editFields.name || ''} onChange={(e)=>setEditFields(prev=>({...prev,name:e.target.value}))}/>
+            <Form.Control value={editFields.name || ''} onChange={(e) => setEditFields(prev => ({ ...prev, name: e.target.value }))} />
           </Form.Group>
           <Form.Group className="mb-2">
             <Form.Label>New Image (optional)</Form.Label>
-            <Form.Control type="file" accept="image/*" onChange={(e)=>setEditImageFile(e.target.files[0] || null)} />
+            <Form.Control type="file" accept="image/*" onChange={(e) => setEditImageFile(e.target.files[0] || null)} />
           </Form.Group>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={()=>setEditingCategory(null)}>Cancel</Button>
-          <Button variant="primary" disabled={loading} onClick={saveCategory}>{loading?'Saving...':'Save'}</Button>
+          <Button variant="secondary" onClick={() => setEditingCategory(null)}>Cancel</Button>
+          <Button variant="primary" disabled={loading} onClick={saveCategory}>{loading ? 'Saving...' : 'Save'}</Button>
         </Modal.Footer>
       </Modal>
     </Container>

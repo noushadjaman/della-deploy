@@ -36,11 +36,37 @@ const ProductDetails = () => {
     fetchProduct();
   }, [id]);
 
-  if (loading) return (
-    <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
-      <Spinner animation="border" variant="primary" />
+  // Optimize Cloudinary URL
+  const getOptimizedUrl = (url, width = 800) => {
+    if (!url || !url.includes('cloudinary.com')) return url;
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+  };
+
+  const SkeletonProduct = () => (
+    <Container className="py-5">
+      <Row className="g-5">
+        <Col md={6}>
+          <div className="skeleton rounded-3 mb-3" style={{ height: '450px' }}></div>
+          <Row className="gx-2">
+            {[1, 2, 3].map(i => (
+              <Col key={i} xs={4}><div className="skeleton rounded" style={{ height: '80px' }}></div></Col>
+            ))}
+          </Row>
+        </Col>
+        <Col md={6}>
+          <div className="skeleton skeleton-title mb-4" style={{ width: '60%', height: '40px' }}></div>
+          <div className="skeleton skeleton-text mb-4" style={{ width: '40%' }}></div>
+          <div className="skeleton skeleton-text mb-2"></div>
+          <div className="skeleton skeleton-text mb-2"></div>
+          <div className="skeleton skeleton-text mb-4" style={{ width: '80%' }}></div>
+          <div className="skeleton rounded-pill mb-5" style={{ width: '200px', height: '50px' }}></div>
+          <div className="skeleton rounded-3" style={{ height: '150px' }}></div>
+        </Col>
+      </Row>
     </Container>
   );
+
+  if (loading) return <SkeletonProduct />;
 
   if (!product) return (
     <Container className="py-5 text-center">
@@ -75,7 +101,7 @@ const ProductDetails = () => {
         <Col md={6}>
           <div className="product-image-gallery">
             <div className="bg-white p-4 rounded-3 shadow-sm text-center border mb-3 main-image-container" style={{ height: '450px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Image src={validImages[activeImageIndex] || product.imageUrl} fluid style={{ maxHeight: '100%', objectFit: 'contain' }} />
+              <Image src={getOptimizedUrl(validImages[activeImageIndex] || product.imageUrl)} fluid loading="eager" style={{ maxHeight: '100%', objectFit: 'contain' }} />
             </div>
             {validImages.length > 1 && (
               <Row className="gx-2">
@@ -86,7 +112,7 @@ const ProductDetails = () => {
                       style={{ height: '80px', cursor: 'pointer', opacity: activeImageIndex === idx ? 1 : 0.6 }}
                       onClick={() => setActiveImageIndex(idx)}
                     >
-                      <img src={img} alt={`thumb-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img src={getOptimizedUrl(img, 200)} alt={`thumb-${idx}`} loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                   </Col>
                 ))}

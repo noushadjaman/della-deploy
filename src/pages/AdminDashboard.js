@@ -54,6 +54,9 @@ const AdminDashboard = () => {
   const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
   const [productSearch, setProductSearch] = useState('');
   const [orderSearch, setOrderSearch] = useState('');
+  const [orderDateFilter, setOrderDateFilter] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showCustomerDetails, setShowCustomerDetails] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingBanner, setEditingBanner] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
@@ -644,7 +647,8 @@ const AdminDashboard = () => {
 
   // Customer Details View
   const viewCustomerDetails = (order) => {
-    // Logic for viewing customer details can be added here if needed
+    setSelectedOrder(order);
+    setShowCustomerDetails(true);
   };
 
   // PDF Memo Generation
@@ -1155,10 +1159,28 @@ const AdminDashboard = () => {
                     {/* Orders List */}
                     <Col lg={8}>
                       <div className="p-4 border rounded-4 bg-white shadow-sm">
-                        <div className="d-flex justify-content-between align-items-center mb-4">
+                        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                           <h5 className="fw-bold mb-0">Order Management</h5>
-                          <div style={{ width: '250px' }}>
-                            <Form.Control size="sm" placeholder="Search orders..." value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} className="rounded-pill" />
+                          <div className="d-flex gap-2 align-items-center">
+                            <Form.Control
+                              type="date"
+                              size="sm"
+                              value={orderDateFilter}
+                              onChange={(e) => setOrderDateFilter(e.target.value)}
+                              className="rounded-pill"
+                              style={{ width: '150px' }}
+                            />
+                            <Form.Control
+                              size="sm"
+                              placeholder="Search orders..."
+                              value={orderSearch}
+                              onChange={(e) => setOrderSearch(e.target.value)}
+                              className="rounded-pill"
+                              style={{ width: '150px' }}
+                            />
+                            {(orderSearch || orderDateFilter) && (
+                              <Button variant="link" size="sm" onClick={() => { setOrderSearch(''); setOrderDateFilter(''); }} className="text-decoration-none p-0">Clear</Button>
+                            )}
                           </div>
                         </div>
 
@@ -1180,27 +1202,30 @@ const AdminDashboard = () => {
                           <Table hover className="align-middle border-top-0">
                             <thead className="bg-light">
                               <tr className="small text-muted text-uppercase">
-                                <th>Order ID</th>
-                                <th>Customer</th>
-                                <th>Amount</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Action</th>
+                                <th style={{ width: '80px' }}>Order ID</th>
+                                <th style={{ width: '100px' }}>Amount</th>
+                                <th style={{ width: '100px' }}>Status</th>
+                                <th style={{ width: '100px' }}>Date</th>
+                                <th className="text-end">Actions</th>
                               </tr>
                             </thead>
                             <tbody className="small">
-                              {orders.filter(order =>
-                                order.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
-                                (order.fullName && order.fullName.toLowerCase().includes(orderSearch.toLowerCase())) ||
-                                (order.phone && order.phone.includes(orderSearch))
-                              ).map(order => (
+                              {orders.filter(order => {
+                                const matchesSearch = order.id.toLowerCase().includes(orderSearch.toLowerCase()) ||
+                                  (order.fullName && order.fullName.toLowerCase().includes(orderSearch.toLowerCase())) ||
+                                  (order.phone && order.phone.includes(orderSearch));
+
+                                let matchesDate = true;
+                                if (orderDateFilter && order.createdAt?.toDate) {
+                                  const orderDate = order.createdAt.toDate().toISOString().split('T')[0];
+                                  matchesDate = orderDate === orderDateFilter;
+                                }
+
+                                return matchesSearch && matchesDate;
+                              }).map(order => (
                                 <tr key={order.id}>
                                   <td>
-                                    <div className="fw-bold text-primary">#{order.id.substring(0, 8)}</div>
-                                  </td>
-                                  <td>
-                                    <div className="fw-bold">{order.fullName || 'N/A'}</div>
-                                    <small className="text-muted">{order.phone}</small>
+                                    <div className="fw-bold text-primary" style={{ fontSize: '0.75rem' }}>#{order.id.substring(0, 8)}</div>
                                   </td>
                                   <td>
                                     <strong>৳ {order.total}</strong>
@@ -1208,58 +1233,78 @@ const AdminDashboard = () => {
                                   <td>
                                     <Badge
                                       bg={order.status === 'pending' ? 'warning' :
-                                        order.status === 'shipped' ? 'info' :
-                                          order.status === 'delivered' ? 'success' :
-                                            order.status === 'cancelled' ? 'danger' : 'secondary'}
-                                      className="px-3 py-2"
+                                        order.status === 'preparing' ? 'info' :
+                                          order.status === 'shipped' ? 'primary' :
+                                            order.status === 'delivered' ? 'success' :
+                                              order.status === 'cancelled' ? 'danger' : 'secondary'}
+                                      style={{ fontSize: '0.65rem' }}
                                     >
                                       {order.status.toUpperCase()}
                                     </Badge>
                                   </td>
                                   <td>
-                                    <small className="text-muted">
+                                    <div style={{ fontSize: '0.7rem' }} className="text-muted">
                                       {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : 'N/A'}
-                                    </small>
+                                    </div>
                                   </td>
                                   <td>
-                                    <div className="d-flex gap-1">
+                                    <div className="d-flex gap-1 justify-content-end">
                                       <Button
                                         size="sm"
-                                        variant="outline-info"
+                                        variant="light"
+                                        className="rounded-circle border"
                                         onClick={() => viewCustomerDetails(order)}
-                                        title="View Customer Details"
+                                        title={`Customer: ${order.fullName || 'N/A'} (${order.phone})`}
                                       >
-                                        <i className="fas fa-user me-1"></i> Details
+                                        <i className="fas fa-user-circle text-info"></i>
                                       </Button>
                                       <Button
                                         size="sm"
-                                        variant="outline-primary"
+                                        variant="light"
+                                        className="rounded-circle border"
                                         onClick={() => generateMemoPDF(order)}
                                         title="Download Memo PDF"
                                       >
-                                        <i className="fas fa-file-pdf me-1"></i> PDF
+                                        <i className="fas fa-file-pdf text-danger"></i>
+                                      </Button>
+                                      <div className="vr mx-1"></div>
+                                      <Button
+                                        size="sm"
+                                        variant={order.status === 'preparing' ? 'primary' : 'outline-primary'}
+                                        onClick={() => handleOrderStatusChange(order.id, 'preparing')}
+                                        disabled={['cancelled', 'delivered', 'shipped', 'preparing'].includes(order.status)}
+                                        className="py-0 px-2 small"
+                                        style={{ fontSize: '0.65rem' }}
+                                      >
+                                        Prep
                                       </Button>
                                       <Button
                                         size="sm"
-                                        variant="outline-primary"
+                                        variant={order.status === 'shipped' ? 'primary' : 'outline-primary'}
                                         onClick={() => handleOrderStatusChange(order.id, 'shipped')}
-                                        disabled={order.status === 'cancelled' || order.status === 'delivered'}
+                                        disabled={['cancelled', 'delivered', 'shipped'].includes(order.status)}
+                                        className="py-0 px-2 small"
+                                        style={{ fontSize: '0.65rem' }}
                                       >
                                         Ship
                                       </Button>
                                       <Button
                                         size="sm"
-                                        variant="outline-success"
+                                        variant={order.status === 'delivered' ? 'success' : 'outline-success'}
                                         onClick={() => handleOrderStatusChange(order.id, 'delivered')}
-                                        disabled={order.status === 'cancelled' || order.status === 'pending'}
+                                        disabled={['cancelled', 'delivered'].includes(order.status) || order.status === 'pending'}
+                                        className="py-0 px-2 small"
+                                        style={{ fontSize: '0.65rem' }}
                                       >
-                                        Delivered
+                                        Receive
                                       </Button>
                                       <Button
                                         size="sm"
                                         variant="outline-danger"
                                         onClick={() => handleOrderStatusChange(order.id, 'cancelled')}
-                                        disabled={order.status === 'delivered'}
+                                        disabled={order.status === 'delivered' || order.status === 'cancelled'}
+                                        className="py-0 px-2 small"
+                                        style={{ fontSize: '0.65rem' }}
                                       >
                                         Cancel
                                       </Button>
@@ -1551,6 +1596,39 @@ const AdminDashboard = () => {
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setEditingCategory(null)}>Cancel</Button>
           <Button variant="primary" disabled={loading} onClick={saveCategory}>{loading ? 'Saving...' : 'Save'}</Button>
+        </Modal.Footer>
+      </Modal>
+      <Modal show={showCustomerDetails} onHide={() => setShowCustomerDetails(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Customer Details</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedOrder && (
+            <div className="p-2">
+              <div className="mb-3">
+                <label className="fw-bold text-muted small text-uppercase">Ordered By</label>
+                <div className="fs-5 fw-bold text-primary">{selectedOrder.fullName || 'N/A'}</div>
+              </div>
+              <div className="mb-3">
+                <label className="fw-bold text-muted small text-uppercase">Contact</label>
+                <div><i className="fas fa-phone me-2 text-muted"></i>{selectedOrder.phone}</div>
+                <div><i className="fas fa-envelope me-2 text-muted"></i>{selectedOrder.userEmail}</div>
+              </div>
+              <div className="mb-3">
+                <label className="fw-bold text-muted small text-uppercase">Shipping Address</label>
+                <div><i className="fas fa-map-marker-alt me-2 text-muted"></i>{selectedOrder.address}</div>
+                <div><i className="fas fa-city me-2 text-muted"></i>{selectedOrder.city || selectedOrder.zone || 'N/A'}</div>
+              </div>
+              <div className="mb-3">
+                <label className="fw-bold text-muted small text-uppercase">Payment Info</label>
+                <div><i className="fas fa-credit-card me-2 text-muted"></i>{selectedOrder.paymentMethod === 'cash' ? 'Cash on Delivery' : 'Online Payment'}</div>
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCustomerDetails(false)}>Close</Button>
+          <Button variant="primary" onClick={() => generateMemoPDF(selectedOrder)}><i className="fas fa-file-pdf me-2"></i>Download Memo</Button>
         </Modal.Footer>
       </Modal>
     </Container>

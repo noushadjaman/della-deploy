@@ -16,6 +16,10 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [countdown, setCountdown] = useState('');
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [bannersLoading, setBannersLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [brandsLoading, setBrandsLoading] = useState(true);
 
   // Countdown to midnight — resets every day at 12:00:00 AM
   useEffect(() => {
@@ -39,68 +43,68 @@ const Home = () => {
   };
 
   useEffect(() => {
-    async function fetchData() {
+    // Incremental Data Fetching
+    const fetchBanners = async () => {
       try {
-        setLoading(true);
+        const qry = query(collection(db, "banners"), orderBy("createdAt", "desc"));
+        const snap = await getDocs(qry);
+        setBanners(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } finally { setBannersLoading(false); }
+    };
 
-        const productsQuery = query(collection(db, "products"), orderBy("createdAt", "desc"));
-        const productsSnapshot = await getDocs(productsQuery);
-        const productsData = productsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setProducts(productsData);
+    const fetchCategories = async () => {
+      try {
+        const qry = query(collection(db, "categories"), orderBy("createdAt", "desc"));
+        const snap = await getDocs(qry);
+        setCategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } finally { setCategoriesLoading(false); }
+    };
 
-        const bannersQuery = query(collection(db, "banners"), orderBy("createdAt", "desc"));
-        const bannersSnapshot = await getDocs(bannersQuery);
-        const bannersData = bannersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setBanners(bannersData);
+    const fetchBrands = async () => {
+      try {
+        const qry = query(collection(db, "brands"), orderBy("createdAt", "desc"));
+        const snap = await getDocs(qry);
+        setBrands(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      } finally { setBrandsLoading(false); }
+    };
 
-        const categoriesQuery = query(collection(db, "categories"), orderBy("createdAt", "desc"));
-        const categoriesSnapshot = await getDocs(categoriesQuery);
-        const categoriesData = categoriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setCategories(categoriesData);
-
-        const brandsQuery = query(collection(db, "brands"), orderBy("createdAt", "desc"));
-        const brandsSnapshot = await getDocs(brandsQuery);
-        const brandsData = brandsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setBrands(brandsData);
-
-        const flashSaleQuery = query(collection(db, "products"), where("isFlashSale", "==", true));
-        const flashSaleSnapshot = await getDocs(flashSaleQuery);
-        const flashSaleData = flashSaleSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setFlashSaleProducts(flashSaleData);
-
-        const dailyDealQuery = query(collection(db, "products"), where("isDailyDeal", "==", true));
-        const dailyDealSnapshot = await getDocs(dailyDealQuery);
-        const dailyDealData = dailyDealSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setDailyDealProducts(dailyDealData);
-
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load content. Please try again later.");
+    const fetchProducts = async () => {
+      try {
+        const qry = query(collection(db, "products"), orderBy("createdAt", "desc"));
+        const snap = await getDocs(qry);
+        const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setProducts(data);
+        setFlashSaleProducts(data.filter(p => p.isFlashSale));
+        setDailyDealProducts(data.filter(p => p.isDailyDeal));
       } finally {
+        setFeaturedLoading(false);
         setLoading(false);
       }
-    }
-    fetchData();
+    };
+
+    fetchBanners();
+    fetchCategories();
+    fetchBrands();
+    fetchProducts();
   }, []);
 
-  if (loading) {
-    return (
-      <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
-        <Spinner animation="border" role="status" variant="primary">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </Container>
-    );
-  }
+  const SkeletonCard = () => (
+    <div className="card h-100 border-0 shadow-sm overflow-hidden p-3" style={{ minWidth: '200px' }}>
+      <div className="skeleton skeleton-img mb-3"></div>
+      <div className="skeleton skeleton-title"></div>
+      <div className="skeleton skeleton-text" style={{ width: '40%' }}></div>
+    </div>
+  );
 
   return (
     <>
-      <Container className="mb-5 mt-3">
-        <Row className="g-3">
-
+      <Container className="mb-4 mt-2 px-2 px-lg-3">
+        <Row className="g-2 g-lg-3">
           {/* ── ROW 1 (all screens): Banner ── */}
           <Col lg={9} md={8} xs={12} className="order-1">
-            {banners.length > 0 ? (
+            {bannersLoading ? (
+              <div className="skeleton rounded-4 home-banner-container" style={{ height: 'clamp(150px, 30vh, 350px)' }}></div>
+            ) : banners.length > 0 ? (
               <Carousel className="shadow-sm rounded overflow-hidden home-banner-container">
                 {banners.map((banner) => (
                   <Carousel.Item key={banner.id} interval={3000}>
@@ -111,12 +115,12 @@ const Home = () => {
                 ))}
               </Carousel>
             ) : (
-              <div className="hero-section rounded p-5 d-flex align-items-center home-banner-container">
+              <div className="hero-section rounded-4 p-4 p-lg-5 d-flex align-items-center home-banner-container" style={{ height: 'clamp(150px, 30vh, 350px)' }}>
                 <div className="text-white">
                   <span className="badge bg-warning text-dark mb-2">New Arrival</span>
-                  <h1 className="display-4 fw-bold">Discover Latest Trends</h1>
-                  <p className="lead mb-4">Shop the best products at unbeatable prices.</p>
-                  <Button variant="light" className="rounded-pill fw-bold text-primary px-4">Shop Now</Button>
+                  <h2 className="fw-bold mb-1" style={{ fontSize: 'clamp(1.2rem, 5vw, 2.5rem)' }}>Discover Latest Trends</h2>
+                  <p className="small mb-3 opacity-90">Shop the best products at unbeatable prices.</p>
+                  <Button variant="light" size="sm" className="rounded-pill fw-bold text-primary px-3">Shop Now</Button>
                 </div>
               </div>
             )}
@@ -124,26 +128,20 @@ const Home = () => {
 
           {/* ── ROW 2 mobile (compact strip) | Sidebar desktop ── */}
           <Col lg={3} md={4} xs={12} className="order-2">
-
-            {/* MOBILE ONLY: compact horizontal scrollable flash sale strip */}
-            <div className="d-lg-none bg-white rounded shadow-sm border overflow-hidden">
-              <div className="px-3 py-1 border-bottom d-flex align-items-center bg-light" style={{ gap: 0 }}>
-                {/* Left: Flash label */}
-                <span className="fw-bold text-danger" style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>
-                  <i className="fas fa-bolt me-1"></i> Flash
-                </span>
-                {/* Center: Live countdown */}
-                <div className="flex-grow-1 text-center">
+            {/* ── ROW 1 mobile | SIDEBAR desktop: Flash Sale ── */}
+            <div className="bg-white rounded-4 shadow-sm flex-column overflow-hidden border mb-3 flash-sale-mobile d-lg-none" style={{ background: 'linear-gradient(135deg, #fff 0%, #fffafa 100%)' }}>
+              <div className="p-2 border-bottom d-flex justify-content-between align-items-center" style={{ background: 'rgba(239, 68, 68, 0.03)' }}>
+                <div className="d-flex align-items-center gap-2">
+                  <h6 className="mb-0 fw-bold text-danger d-flex align-items-center"><i className="fas fa-bolt me-1"></i> Flash</h6>
                   <span style={{
                     fontFamily: 'monospace',
-                    fontSize: '0.78rem',
+                    fontSize: '0.7rem',
                     fontWeight: '700',
-                    color: '#b91c1c',
-                    background: '#fff1f2',
-                    border: '1px solid #fecaca',
-                    borderRadius: '6px',
-                    padding: '1px 8px',
-                    letterSpacing: '0.05em'
+                    color: '#c2410c',
+                    background: '#fff7ed',
+                    border: '1px solid #ffedd5',
+                    borderRadius: '4px',
+                    padding: '0 6px'
                   }}>
                     ⏰ {countdown}
                   </span>
@@ -155,9 +153,14 @@ const Home = () => {
                 className="d-flex px-2 py-2"
                 style={{ overflowX: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none', gap: '8px' }}
               >
-                {flashSaleProducts.length > 0 ? flashSaleProducts.slice(0, 8).map((product) => {
+                {featuredLoading ? (
+                  [1, 2, 3].map(i => (
+                    <div key={i} className="skeleton rounded flex-shrink-0" style={{ width: '150px', height: '45px' }}></div>
+                  ))
+                ) : flashSaleProducts.length > 0 ? flashSaleProducts.slice(0, 8).map((product) => {
                   const discount = product.discount || 0;
                   const discountedPrice = discount > 0 ? (product.price * (1 - discount / 100)).toFixed(0) : product.price;
+
                   return (
                     <div
                       key={product.id}
@@ -181,28 +184,32 @@ const Home = () => {
             </div>
 
             {/* DESKTOP ONLY: tall sidebar flash sale */}
-            <div className="d-none d-lg-flex bg-white rounded shadow-sm flex-column overflow-hidden border flash-sale-container" style={{ height: '100%' }}>
-              <div className="p-2 p-lg-3 border-bottom d-flex justify-content-between align-items-center bg-light">
+            <div className="d-none d-lg-flex bg-white rounded-4 shadow-sm flex-column overflow-hidden border flash-sale-container" style={{ height: '100%', background: 'linear-gradient(180deg, #fff 0%, #fdf2f2 100%)' }}>
+              <div className="p-3 border-bottom d-flex justify-content-between align-items-center" style={{ background: 'rgba(239, 68, 68, 0.03)' }}>
                 <div className="d-flex align-items-center gap-2">
-                  <h6 className="mb-0 fw-bold text-danger flash-sale-header-title"><i className="fas fa-bolt me-1"></i> Flash</h6>
+                  <h6 className="mb-0 fw-extrabold text-danger flash-sale-header-title" style={{ letterSpacing: '0.5px' }}><i className="fas fa-bolt me-1"></i> FLASH SALE</h6>
                   <span style={{
                     fontFamily: 'monospace',
-                    fontSize: '0.75rem',
-                    fontWeight: '700',
-                    color: '#b91c1c',
-                    background: '#fff1f2',
-                    border: '1px solid #fecaca',
-                    borderRadius: '6px',
-                    padding: '1px 8px',
-                    letterSpacing: '0.05em'
+                    fontSize: '0.85rem',
+                    fontWeight: '800',
+                    color: '#c2410c',
+                    background: '#fff7ed',
+                    border: '2px solid #ffedd5',
+                    borderRadius: '8px',
+                    padding: '2px 10px',
+                    letterSpacing: '0.1em'
                   }}>
-                    ⏰ {countdown}
+                    {countdown}
                   </span>
                 </div>
-                <small className="text-primary fw-bold shop-more-btn" style={{ cursor: 'pointer', fontSize: '0.65rem' }} onClick={handleMoreClick}>More &gt;</small>
+                <small className="text-primary fw-bold shop-more-btn" style={{ cursor: 'pointer', fontSize: '0.7rem' }} onClick={handleMoreClick}>ALL &gt;</small>
               </div>
               <div className="overflow-auto p-1 p-lg-2 flash-sale-list flex-grow-1" style={{ minHeight: '0' }}>
-                {flashSaleProducts.length > 0 ? flashSaleProducts.slice(0, 6).map((product) => {
+                {featuredLoading ? (
+                  [1, 2, 3].map(i => (
+                    <div key={i} className="d-flex align-items-center p-3 mb-3 border rounded-3 bg-white skeleton" style={{ height: '100px' }}></div>
+                  ))
+                ) : flashSaleProducts.length > 0 ? flashSaleProducts.slice(0, 6).map((product) => {
                   const discount = product.discount || 0;
                   const discountedPrice = discount > 0 ? (product.price * (1 - discount / 100)).toFixed(0) : product.price;
                   // Simulated stock progress for "cool" effect
@@ -239,25 +246,23 @@ const Home = () => {
           </Col>
 
           {/* ── ROW 3 mobile | ROW 2 desktop: Featured Products ── */}
-          <Col lg={12} md={12} xs={12} className="order-3">
+          <Col lg={12} md={12} xs={12} className="order-3 mt-4">
             <div id="products">
-              <div className="d-flex justify-content-between align-items-center mb-2">
-                <h5 className="fw-bold mb-0 featured-products-title">Featured Products</h5>
-                <Link to="/products" className="text-primary fw-bold text-decoration-none small">More &gt;</Link>
+              <div className="d-flex justify-content-between align-items-center mb-2 px-1">
+                <h4 className="fw-800 mb-0 featured-products-title" style={{ background: 'linear-gradient(45deg, var(--secondary), var(--primary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', display: 'inline-block' }}>Featured Products</h4>
+                <Link to="/products" className="text-primary fw-bold small text-decoration-none">View More &gt;</Link>
               </div>
 
               {error && <Alert variant="danger">{error}</Alert>}
-              {!loading && products.length === 0 && (
-                <div className="text-center py-5"><h5 className="text-muted">No products found yet.</h5></div>
-              )}
 
               <div className="d-flex overflow-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', gap: '8px' }}>
-                {products.map((product, idx) => (
+                {featuredLoading ? (
+                  [1, 2, 3, 4].map(i => <SkeletonCard key={i} />)
+                ) : products.map((product, idx) => (
                   <div
                     key={product.id}
                     className={`featured-product-item ${idx >= 4 ? 'd-none d-sm-block' : ''}`}
-                    /* clamp: 130px min on very small phones, 40vw fluid, 220px max on desktop */
-                    style={{ minWidth: 'clamp(130px, 38vw, 220px)', flex: '0 0 auto' }}
+                    style={{ minWidth: '150px', flex: '0 0 auto' }}
                   >
                     <ProductCard product={product} />
                   </div>
@@ -267,19 +272,26 @@ const Home = () => {
           </Col>
 
         </Row>
-      </Container>
+      </Container >
 
-      <Container className="mb-5">
+      <Container className="mb-4 mt-3">
         <Row className="g-4">
           {/* Shop by Category */}
           <Col lg={6}>
-            <div className="bg-white rounded shadow-sm overflow-hidden border h-100 p-3">
-              <div className="d-flex justify-content-between align-items-center mb-4 px-2">
-                <h5 className="fw-bold mb-0">Shop by Category</h5>
-                <a href="#categories" className="text-primary fw-medium small" onClick={(e) => { e.preventDefault(); navigate('/categories'); }}>View All <i className="fas fa-arrow-right ms-1"></i></a>
+            <div className="bg-white rounded-4 shadow-sm overflow-hidden border h-100 p-4" style={{ background: 'linear-gradient(135deg, #fff 0%, #f8fafc 100%)' }}>
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h5 className="fw-800 mb-0" style={{ color: 'var(--secondary)' }}>Shop by Category</h5>
+                <a href="#categories" className="btn btn-sm btn-light rounded-pill border px-3" onClick={(e) => { e.preventDefault(); navigate('/categories'); }}>All Categories <i className="fas fa-arrow-right ms-1" style={{ fontSize: '0.7rem' }}></i></a>
               </div>
               <div className="d-flex overflow-auto pb-2 category-scroll-container" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                {categories.map((cat, idx) => (
+                {categoriesLoading ? (
+                  [1, 2, 4, 5, 6].map(i => (
+                    <div key={i} className="text-center me-4" style={{ minWidth: '80px' }}>
+                      <div className="skeleton rounded-circle mb-2 mx-auto" style={{ width: '65px', height: '65px' }}></div>
+                      <div className="skeleton skeleton-text mx-auto" style={{ width: '40px' }}></div>
+                    </div>
+                  ))
+                ) : categories.map((cat, idx) => (
                   <div key={cat.id || idx} className="text-center me-4" style={{ minWidth: '80px', cursor: 'pointer' }} onClick={() => navigate(`/category/${cat.name}`)}>
                     <div className="rounded-circle overflow-hidden shadow-sm mb-2 d-flex align-items-center justify-content-center bg-white border mx-auto" style={{ width: '65px', height: '65px' }}>
                       {cat.imageUrl ? (
@@ -291,7 +303,7 @@ const Home = () => {
                     <span className="fw-medium text-dark d-block text-truncate" style={{ fontSize: '0.75rem' }}>{cat.name}</span>
                   </div>
                 ))}
-                {categories.length === 0 && (
+                {!categoriesLoading && categories.length === 0 && (
                   <div className="text-muted w-100 text-center py-3">No categories found.</div>
                 )}
               </div>
@@ -300,16 +312,24 @@ const Home = () => {
 
           {/* Brand Deals */}
           <Col lg={6}>
-            <div className="bg-white rounded shadow-sm overflow-hidden border h-100">
-              <div className="p-3 border-bottom d-flex justify-content-between align-items-center brand-deals-header">
-                <h5 className="mb-0 fw-bold text-primary"><i className="fas fa-tags me-1"></i> Brand Deals</h5>
-                <small className="text-primary fw-bold" style={{ cursor: 'pointer' }} onClick={() => navigate('/brands')}>View All Brands &gt;</small>
+            <div className="bg-white rounded-4 shadow-sm overflow-hidden border h-100" style={{ background: 'linear-gradient(135deg, #fff 0%, #f0f9ff 100%)' }}>
+              <div className="p-3 p-lg-4 border-bottom d-flex justify-content-between align-items-center">
+                <h5 className="fw-800 mb-0 d-flex align-items-center" style={{ color: 'var(--secondary)', fontSize: 'clamp(0.9rem, 4vw, 1.25rem)' }}>
+                  <i className="fas fa-tags text-primary me-2"></i> Brand Deals
+                </h5>
+                <Link to="/brands" className="btn btn-sm btn-light rounded-pill border px-3" style={{ fontSize: '0.7rem' }}>All <i className="fas fa-arrow-right ms-1"></i></Link>
               </div>
-              <div className="p-3">
-                <Row className="g-3">
-                  {brands.slice(0, 4).map((brand) => (
+              <div className="p-2 p-lg-3">
+                <Row className="g-2 g-lg-3">
+                  {brandsLoading ? (
+                    [1, 2, 3, 4].map(i => (
+                      <Col key={i} xs={6} sm={3}>
+                        <div className="skeleton rounded" style={{ height: '100px' }}></div>
+                      </Col>
+                    ))
+                  ) : brands.slice(0, 4).map((brand) => (
                     <Col key={brand.id} xs={6} sm={3}>
-                      <Link to={`/brand/${brand.name}`} className="text-decoration-none">
+                      <Link to={`` + `/brand/${brand.name}`} className="text-decoration-none">
                         <div className="brand-card text-center p-2 rounded h-100 d-flex flex-column align-items-center justify-content-center hover-shadow transition-all border">
                           <div className="brand-logo-wrapper mb-2 d-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm border overflow-hidden" style={{ width: '80px', height: '80px' }}>
                             <img src={brand.imageUrl} alt={brand.name} className="brand-logo-img img-fluid" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -319,7 +339,7 @@ const Home = () => {
                       </Link>
                     </Col>
                   ))}
-                  {brands.length === 0 && (
+                  {!brandsLoading && brands.length === 0 && (
                     <div className="text-center p-4 text-muted w-100"><small>No Brand Deals available.</small></div>
                   )}
                 </Row>
@@ -329,30 +349,32 @@ const Home = () => {
         </Row>
       </Container>
 
-      <Container className="mb-5">
-        <Row className="g-4">
-          <Col lg={12}>
-            <div className="bg-white rounded shadow-sm overflow-hidden border">
-              <div className="p-3 border-bottom d-flex justify-content-between align-items-center bg-light">
-                <h5 className="mb-0 fw-bold text-danger"><i className="fas fa-fire me-1"></i> Daily Deals</h5>
-                <small className="text-primary fw-bold" style={{ cursor: 'pointer' }} onClick={handleMoreClick}>More &gt;</small>
+      <Container className="mb-5 mt-5 pb-5">
+        <div className="bg-white rounded-4 shadow-sm overflow-hidden border" style={{ background: 'linear-gradient(180deg, #fff 0%, #f8fafc 100%)' }}>
+          <div className="p-4 border-bottom d-flex justify-content-between align-items-center">
+            <h5 className="fw-800 mb-0 d-flex align-items-center" style={{ color: 'var(--secondary)' }}>
+              <i className="fas fa-fire-alt text-danger me-2"></i> Hot Daily Deals
+            </h5>
+            <small className="text-primary fw-bold" style={{ cursor: 'pointer' }} onClick={handleMoreClick}>More Deals &gt;</small>
+          </div>
+          <div className="p-3">
+            {featuredLoading ? (
+              <div className="d-flex overflow-auto pb-2" style={{ gap: '15px' }}>
+                {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
               </div>
-              <div className="p-3">
-                {dailyDealProducts.length > 0 ? (
-                  <div className="d-flex overflow-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {dailyDealProducts.slice(0, 8).map((product) => (
-                      <div key={product.id} className="me-3" style={{ minWidth: '220px', flex: '0 0 auto' }}>
-                        <ProductCard product={product} />
-                      </div>
-                    ))}
+            ) : dailyDealProducts.length > 0 ? (
+              <div className="d-flex overflow-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', gap: '6px' }}>
+                {dailyDealProducts.slice(0, 8).map((product) => (
+                  <div key={product.id} style={{ minWidth: '150px', flex: '0 0 auto' }}>
+                    <ProductCard product={product} />
                   </div>
-                ) : (
-                  <div className="text-center p-4 text-muted"><small>No daily deals available.</small></div>
-                )}
+                ))}
               </div>
-            </div>
-          </Col>
-        </Row>
+            ) : (
+              <div className="text-center p-4 text-muted"><small>No daily deals available.</small></div>
+            )}
+          </div>
+        </div>
       </Container>
 
       <div className="bg-primary py-5 text-white text-center mb-5 rounded-3 container">

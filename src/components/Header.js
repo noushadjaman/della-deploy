@@ -82,16 +82,16 @@ const Header = () => {
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center me-2 me-lg-5 logo-container">
           <svg className="logo-svg" viewBox="0 0 240 60" xmlns="http://www.w3.org/2000/svg">
             {/* The fill text */}
-            <text x="10" y="45" className="logo-text-fill">DELLA</text>
+            <text x="10" y="45" className="logo-text-fill" fill="var(--accent)">DELLA</text>
 
             {/* The drawing stroke text */}
-            <text x="10" y="45" className="logo-text-main">DELLA</text>
+            <text x="10" y="45" className="logo-text-main" stroke="var(--secondary)">DELLA</text>
 
             {/* Red Accent Triangle */}
-            <path className="logo-accent-triangle" d="M110,10 L120,10 L115,2 Z" />
+            <path className="logo-accent-triangle" d="M110,10 L120,10 L115,2 Z" fill="var(--primary)" />
 
             {/* Red signature dot - 2X big and at the corner of A */}
-            <circle className="logo-dot" cx="160" cy="35" r="5" />
+            <circle className="logo-dot" cx="160" cy="35" r="5" fill="var(--primary)" />
           </svg>
         </Navbar.Brand>
 

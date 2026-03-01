@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Image, Badge, Breadcrumb, Spinner, Toast, ToastContainer } from 'react-bootstrap';
+import { Container, Row, Col, Button, Image, Badge, Breadcrumb, Toast, ToastContainer } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { db } from '../firebase';

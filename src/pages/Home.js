@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Button, Spinner, Alert, Carousel } from 'react-bootstrap';
+import { Container, Row, Col, Button, Alert, Carousel } from 'react-bootstrap';
 import ProductCard from '../components/ProductCard';
 import { db } from '../firebase';
-import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ const Home = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState([]);
   const [dailyDealProducts, setDailyDealProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error] = useState('');
   const [countdown, setCountdown] = useState('');
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [bannersLoading, setBannersLoading] = useState(true);
@@ -329,7 +329,7 @@ const Home = () => {
                     ))
                   ) : brands.slice(0, 4).map((brand) => (
                     <Col key={brand.id} xs={6} sm={3}>
-                      <Link to={`` + `/brand/${brand.name}`} className="text-decoration-none">
+                      <Link to={`/brand/${brand.name}`} className="text-decoration-none">
                         <div className="brand-card text-center p-2 rounded h-100 d-flex flex-column align-items-center justify-content-center hover-shadow transition-all border">
                           <div className="brand-logo-wrapper mb-2 d-flex align-items-center justify-content-center bg-white rounded-circle shadow-sm border overflow-hidden" style={{ width: '80px', height: '80px' }}>
                             <img src={brand.imageUrl} alt={brand.name} className="brand-logo-img img-fluid" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

@@ -13,7 +13,7 @@ const Home = () => {
   const [brands, setBrands] = useState([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState([]);
   const [dailyDealProducts, setDailyDealProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [error] = useState('');
   const [countdown, setCountdown] = useState('');
   const [featuredLoading, setFeaturedLoading] = useState(true);

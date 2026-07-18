@@ -1,6 +1,9 @@
 # Della E-commerce Platform
+Authors:
+Md Nushad Jaman Raj
+Juhayer Al Tausif
 
-A full-stack e-commerce application built with React, Node.js, Express, and Firebase.
+A full-stack e-commerce application built with React, Node.js, Express, and Supabase.
 
 ## Features
 - **Frontend**: React.js with React Bootstrap for styling (mimicking eBay design).
